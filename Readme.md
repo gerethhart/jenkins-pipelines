@@ -64,14 +64,14 @@ As a note, the ['seed job'](jenkins/seedJob.groovy) must be created & maintained
 For pipelines that are tied to application code or infrastructure repos (e.g. terraform) follow a largely similar process.
 This type of repository is modeled by the CodeUnit object. Since different repository types have different configuration 
 requirements (e.g. terraform vs Java app) there is an additional subdivision of types that inherit from [CodeUnit](src/main/com/example/pojo/codeunit/CodeUnit.groovy) to provide
-more specific configurations. Take SpringCodeUnit for example on top of the standard git repository configurations, it also
-supplies optional database configuration options as well as java package group. The SpringCodeUnit also most importantly 
+more specific configurations. Take [GoCodeUnit](src/main/com/example/pojo/codeunit/CodeUnit.groovy) for example. On top of the standard git repository configurations, it also
+supplies optional configuration options for thinks like optionally disabling unit tests, or setting the org name if building a terraform provider. The GoCodeUnit also most importantly 
 sets the `applicationType` field which is used to determine which of the standardized pipelines to use, in this case being
 `ApplicationType.SPRING` configures the down stream code to use the spring build pipeline. 
 
 
 A few additional benefits come out of this design such as being able to standardize names as well as performing assertions
-to ensure that all of the required configs were passed in. The [JobDslService](src/main/com/example/services/JobDslService.groovy)
+to ensure that all the required configs were passed in. The [JobDslService](src/main/com/example/services/JobDslService.groovy)
 handles the translation of a given code unit into the JobDsl format. Using this method again allows us to deduplicate code,
 and centralize implementation, reducing maintenance and overhead.
 
