@@ -1,0 +1,49 @@
+apply plugin: 'groovy'
+
+
+sourceSets {
+    main {
+        groovy.srcDirs = ["src/main", "src/pipelines"]
+    }
+
+    test {
+        groovy.srcDirs = ["src/test/"]
+    }
+}
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral();
+    google();
+    maven {
+        url "https://repo.jenkins-ci.org/public"
+    }
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.25'
+    implementation("org.jenkins-ci.plugins:cloudbees-folder:6.1100.ve9eed61d16c4")
+    implementation('org.jenkins-ci.main:jenkins-core:2.568')
+    implementation("org.jenkins-ci.plugins.workflow:workflow-step-api:724.v538c2362b_dfb_") {
+        artifact {
+            name = "workflow-step-api"
+            type = "jar"
+        }
+    }
+    implementation "com.lesfurets:jenkins-pipeline-unit:1.9"
+
+    implementation 'org.codehaus.groovy:groovy-json:3.0.8'
+    implementation "org.jenkins-ci.plugins:plugin:1.411@pom"
+
+    implementation "javax.servlet:javax.servlet-api:4.0.1"
+
+    implementation 'com.thoughtworks.xstream:xstream:1.4.21'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:4.0.0'
+
+}

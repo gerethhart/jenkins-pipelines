@@ -1,0 +1,232 @@
+package com.example.services
+
+import com.example.enumerations.PipelineTriggerType
+import com.example.pojo.Pipeline
+import com.example.pojo.codeunit.CodeUnit
+
+class JobDslService extends Service {
+    private Object dslContext = pipelineContext //renaming variable for clarity of use
+    JobDslService(Object pipelineContext) {
+        super(pipelineContext)
+    }
+
+    void createPipeline(String folder, Pipeline pipeline) {
+        folder = (folder.lastIndexOf('/') == folder.length() - 1 && folder.length() > 1) ? folder.substring(0, Math.max(0, folder.length() - 1)) : folder
+        folder = (folder.length() == 0 || '/' == folder.charAt(0).toString())? folder : '/' + folder
+        dslContext.println(folder + "/${pipeline.name}")
+        dslContext.pipelineJob(folder + "/" + pipeline.name) {
+            description pipeline.description
+
+            if (pipeline.triggers != null && !pipeline.triggers.isEmpty()) {
+                pipeline.triggers.each { trigger ->
+                    if (trigger.type == PipelineTriggerType.GENERIC) {
+                        genericTrigger {
+                            genericVariables {
+                                if (trigger.variables != null && !trigger.variables.isEmpty()) {
+                                    trigger.variables.each { variable ->
+                                        genericVariable {
+                                            key(variable.key)
+                                            value(variable.expressionValue)
+                                            expressionType(variable.triggerVariableType.value)
+                                            defaultValue(variable.defaultValue) //Optional, defaults to empty string
+                                        }
+                                    }
+                                }
+                            }
+                            token(trigger.token)
+                        }
+                    }
+                }
+            }
+
+            if (pipeline.envs != null
+                    && !pipeline.envs.isEmpty()) {
+                environmentVariables {
+                    pipeline.envs.keySet().each { key ->
+                        env(key, pipeline.envs.get(key))
+                    }
+                }
+            }
+
+            displayName(pipeline.displayName)
+            disabled pipeline.disabled
+            logRotator {
+                numToKeep pipeline.buildsToKeep
+            }
+
+            if (pipeline.parameters != null && pipeline.parameters.size() > 0) {
+                parameters() {
+                    pipeline.parameters.each { parameter ->
+                        switch (parameter.type) {
+                            case String.class:
+                                stringParam(parameter.name, parameter.defaultValue, parameter.description)
+                                break;
+                            case Boolean.class:
+                                booleanParam(parameter.name, parameter.defaultValue, parameter.description)
+                                break;
+                            case List.class:
+                                choiceParam(parameter.name, parameter.defaultValue, parameter.description)
+                                break;
+                            default:
+                                throw RuntimeException("Parameter not supported")
+                        }
+                    }
+                }
+            }
+            properties {
+                if (pipeline.triggers.size() > 0) {
+                    pipelineTriggers {
+                        triggers {
+                            pipeline.triggers.each { trigger ->
+                                switch (trigger.type) {
+                                    case PipelineTriggerType.CRON:
+                                        cron {
+                                            spec(trigger.value);
+                                        }
+                                        break;
+                                    case PipelineTriggerType.GENERIC:
+                                        dslContext.println "WARN: Ignoring Generic trigger as it is not yet implemented"
+                                        break
+                                    case com.example.services.enumerations.PipelineTriggerType.UPSTREAM:
+                                        upstream {
+                                            upstreamProjects(trigger.value)
+                                        }
+                                        break
+                                    default:
+                                        throw new RuntimeException("Pipeline Trigger Type Not Implemented ${trigger.type} for pipeline ${pipeline.name}")
+                                }
+                            }
+
+                        }
+                    }
+                }
+                if (!pipeline.allowConcurrency) {
+                    disableConcurrentBuilds {
+                        abortPrevious(false)
+                    }
+                }
+
+                if (pipeline.disableResume) {
+                    disableResume()
+                }
+            }
+            definition {
+                cpsScm {
+                    lightweight(false)
+                    scm {
+                        git {
+                            remote {
+                                credentials(pipeline.credentialId)
+                                name('origin')
+                                url(pipeline.gitRepo)
+                            }
+
+                            branch('main')
+
+                            browser {
+                                gitWeb("https://github.com/example-services/your-cicd-repo")
+                            }
+                            extensions {
+                                cloneOptions {
+                                    shallow(true)
+                                    depth(1)
+                                }
+                            }
+                        }
+                    }
+                    scriptPath(pipeline.jenkinsfileLocation)
+                }
+            }
+        }
+    }
+
+    String createMultibranch(CodeUnit codeUnit) {
+        String jobName = ""
+        String appFolderName = "/" + codeUnit.applicationType.value.toLowerCase().replace(' ', '-') as String
+
+        dslContext.folder(appFolderName) {
+            displayName(codeUnit.applicationType.value)
+        }
+        codeUnit.name.split("-").each { name -> jobName += name.capitalize() + " " }
+        jobName = jobName.trim()
+        String folderName = appFolderName + '/' + jobName.replaceAll(" ", "-").toLowerCase()
+        dslContext.folder(folderName) {
+            displayName(jobName)
+        }
+
+        dslContext.multibranchPipelineJob(folderName + '/' + codeUnit.name + '-multibranch') {
+            displayName jobName + " Multibranch"
+            factory {
+                remoteJenkinsFileWorkflowBranchProjectFactory {
+                    localMarker("")
+                    matchBranches(false)
+                    remoteJenkinsFile codeUnit.applicationType.getRemoteJenkinsfile()
+                    remoteJenkinsFileSCM {
+                        gitSCM {
+                            branches {
+                                branchSpec {
+                                    name('main')
+                                }
+                            }
+                            extensions {
+                                cloneOption {
+                                    shallow(codeUnit.shallowClone)
+                                    depth(1)
+                                    noTags(!codeUnit.pullTags)
+                                    reference("")
+                                    timeout(10)
+                                }
+                            }
+                            userRemoteConfigs {
+                                userRemoteConfig {
+                                    name("My CICD Repository") //Custom Repository Name or ID
+                                    url('ssh://git@github.com/my-org/my-cicd-repo')
+                                    //URL for the repository
+                                    refspec("main") // Branch spec
+                                    credentialsId("jenkins-git") // Credential ID. Leave blank if not required
+                                }
+                                browser {} // Leave blank for default Git Browser
+                                gitTool("") //Leave blank for default git executable
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            branchSources {
+                branchSource {
+                    source {
+                            github {
+                                repoOwner(codeUnit.repo.org)
+                                repository(codeUnit.repo.repoName)
+                                repositoryUrl('https://github.com')
+                                configuredByUrl(false)
+                                credentialsId('gitea-access-token')
+                                id(codeUnit.name)
+                                traits {
+                                    gitHubPullRequestDiscovery {
+                                        strategyId(0)
+                                    }
+                                    headWildcardFilter {
+                                        includes("${codeUnit.defaultBranch} PR-*")
+                                        excludes('')
+                                    }
+                                    gitHubBranchDiscovery {
+                                        strategyId(0)
+                                    }
+                                    gitHubSshCheckout {
+                                        // Credentials used to check out sources.
+
+                                        credentialsId(codeUnit.getRepo().getSshCredentialsId())
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        return folderName;
+    }
+}
+
