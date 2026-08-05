@@ -3,6 +3,8 @@ import com.example.enumerations.PipelineTriggerType
 import com.example.pojo.*
 import com.example.pojo.codeunit.*
 import com.example.services.JobDslService
+import com.example.pojo.codeunit.TerraformCodeUnit
+import com.example.pojo.codeunit.TerraformCodeUnitCollection
 
 JobDslService jobDslService = new JobDslService(this)
 
