@@ -3,11 +3,11 @@ apply plugin: 'groovy'
 
 sourceSets {
     main {
-        groovy.srcDirs = ["src/main", "src/pipelines"]
+        groovy.srcDirs = ["src/", "pipelines"]
     }
 
     test {
-        groovy.srcDirs = ["src/test/"]
+        groovy.srcDirs = ["test/"]
     }
 }
 java {

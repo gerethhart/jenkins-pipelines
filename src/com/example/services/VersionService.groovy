@@ -1,6 +1,8 @@
 package com.example.services
 
 import com.example.pojo.Version
+import com.example.services.GitService
+import com.example.services.Service
 
 import java.nio.charset.StandardCharsets
 
