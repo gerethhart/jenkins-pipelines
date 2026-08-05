@@ -1,13 +1,12 @@
 package go
 
+@Library('CommonUtils') _
 import com.lesfurets.jenkins.unit.global.lib.Library
 import com.example.pojo.Version
 import com.example.pojo.codeunit.GoCodeUnit
 import com.example.pojo.codeunit.GoCodeUnitCollection
 import com.example.services.GitService
 import com.example.services.VersionService
-
-@Library('CommonUtils') _
 
 
 GitService gitService = new GitService(this)
