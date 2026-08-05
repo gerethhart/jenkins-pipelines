@@ -29,24 +29,5 @@ pipeline {
                 }
             }
         }
-
-        stage ('Update Version Database Schema') {
-            agent {
-                label 'container-builder'
-            }
-            environment {
-                POSTGRES_USERNAME = 'jenkins'
-                POSTGRES_PASSWORD = credentials('jenkins-app-version-password')
-                POSTGRES_URL = '10.1.0.18'
-                POSTGRES_PORT = '5432'
-            }
-            steps {
-                script {
-                    List<TerraformCodeUnit> codeUnits = TerraformCodeUnitCollection.getCodeUnits()
-                    print('CodeUnit length: ' + codeUnits.size())
-                    sh './gradlew liquibase update'
-                }
-            }
-        }
     }
 }
