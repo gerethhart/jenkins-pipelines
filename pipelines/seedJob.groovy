@@ -12,7 +12,13 @@ pipeline {
         label 'built-in-node'
     }
     stages {
-
+        stage ("Build & Test Project") {
+            steps {
+                script {
+                    sh './gradlew test'
+                }
+            }
+        }
         stage("Process Seed File") {
             steps {
                 script {
