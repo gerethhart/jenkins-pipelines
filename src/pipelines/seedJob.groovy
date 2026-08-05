@@ -1,8 +1,10 @@
+
+@Library('CommonUtils') _
+
 import com.example.pojo.codeunit.TerraformCodeUnit
 import com.example.pojo.codeunit.TerraformCodeUnitCollection
 import com.lesfurets.jenkins.unit.global.lib.Library
 
-@Library('CommonUtils') _
 
 
 pipeline {
