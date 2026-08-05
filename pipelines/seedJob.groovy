@@ -18,7 +18,7 @@ pipeline {
                 script {
                     sh 'ls -l'
                     jobDsl(
-                            targets: 'jenkins/seed.groovy',
+                            targets: 'pipelines/seed.groovy',
                             removedJobAction: 'DELETE',
                             removedViewAction: 'DELETE',
                             removedConfigFilesAction: 'DELETE',
