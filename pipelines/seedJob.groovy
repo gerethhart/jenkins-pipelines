@@ -9,9 +9,7 @@ import com.lesfurets.jenkins.unit.global.lib.Library
 
 pipeline {
     agent {
-        kubernetes {
-            inheritFrom 'jnlp'
-        }
+        label 'built-in-node'
     }
     stages {
 
