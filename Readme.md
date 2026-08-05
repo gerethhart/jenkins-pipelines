@@ -32,9 +32,9 @@ The pipeline object is designed to be a collection of variables that contain all
 creating the job, with any job specific values being passed to the job via the envs field. The pipeline objects are stored in an object
 called PipelineCollection that contains a single static array list with the pipeline definitions in it.
 
-Parameters can also be handled here via a list of [PipelineParameter](src/main/com/example/pojo/PipelineParameter.groovy) objects being passed in under the parameters field.
+Parameters can also be handled here via a list of [PipelineParameter](jenkins/src/main/com/example/pojo/PipelineParameter.groovy) objects being passed in under the parameters field.
 
-For regularly scheduled jobs triggers  are also available via the [PipelineTrigger](src/main/com/example/pojo/PipelineTrigger.groovy) object although the only available options here are GENERIC_WEBHOOK and CRON.
+For regularly scheduled jobs triggers  are also available via the [PipelineTrigger](jenkins/src/main/com/example/pojo/PipelineTrigger.groovy) object although the only available options here are GENERIC_WEBHOOK and CRON.
 
 ```groovy
 new Pipeline(
@@ -63,15 +63,15 @@ As a note, the ['seed job'](jenkins/seedJob.groovy) must be created & maintained
 
 For pipelines that are tied to application code or infrastructure repos (e.g. terraform) follow a largely similar process.
 This type of repository is modeled by the CodeUnit object. Since different repository types have different configuration 
-requirements (e.g. terraform vs Java app) there is an additional subdivision of types that inherit from [CodeUnit](src/main/com/example/pojo/codeunit/CodeUnit.groovy) to provide
-more specific configurations. Take [GoCodeUnit](src/main/com/example/pojo/codeunit/CodeUnit.groovy) for example. On top of the standard git repository configurations, it also
+requirements (e.g. terraform vs Java app) there is an additional subdivision of types that inherit from [CodeUnit](jenkins/src/main/com/example/pojo/codeunit/CodeUnit.groovy) to provide
+more specific configurations. Take [GoCodeUnit](jenkins/src/main/com/example/pojo/codeunit/CodeUnit.groovy) for example. On top of the standard git repository configurations, it also
 supplies optional configuration options for thinks like optionally disabling unit tests, or setting the org name if building a terraform provider. The GoCodeUnit also most importantly 
 sets the `applicationType` field which is used to determine which of the standardized pipelines to use, in this case being
 `ApplicationType.SPRING` configures the down stream code to use the spring build pipeline. 
 
 
 A few additional benefits come out of this design such as being able to standardize names as well as performing assertions
-to ensure that all the required configs were passed in. The [JobDslService](src/main/com/example/services/JobDslService.groovy)
+to ensure that all the required configs were passed in. The [JobDslService](jenkins/src/main/com/example/services/JobDslService.groovy)
 handles the translation of a given code unit into the JobDsl format. Using this method again allows us to deduplicate code,
 and centralize implementation, reducing maintenance and overhead.
 

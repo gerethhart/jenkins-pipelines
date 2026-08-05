@@ -1,0 +1,23 @@
+services:
+  jenkins-go-agent:
+    image: "test:here"
+    depends_on:
+      - jenkins-controller
+    environment:
+      JENKINS_URL: 'http://jenkins-controller:8080'
+      #needs to change to whatever your installation shows for your created perminant agent
+      JENKINS_SECRET: 'b47e78077558973933c9860dfbef8c1cb1ce1e73e0c1c4415204f406ccec969c'
+      JENKINS_AGENT_NAME: 'go'
+  jenkins-controller:
+    image: "jenkins/jenkins:latest"
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:8080/static/1da49296/images/svgs/logo.svg"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    volumes:
+      - /opt/jenkins:/var/jenkins_home

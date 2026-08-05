@@ -24,7 +24,7 @@ if (JOB_URL.contains('/Sandboxes/')) {
 }
 pipeline {
     agent {
-        label 'container-builder'
+        label 'go'
     }
 
     stages {
